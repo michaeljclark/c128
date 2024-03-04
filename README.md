@@ -30,6 +30,58 @@ than bit-wise dividers in old versions of compiler-rt.
 | `div_128_by_64_small`            | 22.60ns |    ~90 |
 | `div_64_by_64`                   |  7.30ns |    ~30 |
 
+## Implementation
+
+The 128-bit divider uses accelerated 128-bit by 64-bit primitive to perform
+step-wise base 2^64 long division using the divide instruction at most twice.
+This is the dispatch function that chooses the division method:
+
+```
+/* 128-bit unsigned divmod using optimized intrinsics */
+
+static inline i128_t i128_divmodu(i128_t u, i128_t v, i128_t *r)
+{
+    i128_t q;
+
+    if (v.hi == 0 && v.lo == 0) {                   /* division by zero */
+        q = i128_from_i64(-1);
+        *r = u;
+    }
+    else if (u.hi == 0) {                           /* 64-bit dividend */
+        if (v.hi == 0) {                            /* 64-bit divisor */
+            q.hi = 0;
+            q.lo = u.lo / v.lo;
+            r->hi = 0;
+            r->lo = u.lo % v.lo;
+        } else {                                    /* 128-bit divisor */
+            q = i128_from_u64(0);
+            *r = u;
+        }
+    }
+    else if (v.hi == 0) {                           /* 128-bit by 64-bit */
+        i128_t q;
+        r->hi = 0;
+        if ((u64)u.hi < v.lo) {                     /* 64-bit quotient */
+            q.hi = 0;
+            q.lo = i64_udiv_i128_i64(u, v.lo, &r->lo);
+        } else {                                    /* 128-bit quotient */
+            i128_t u2, u3;
+            u2 = i128_from_u64(u.hi);
+            q.hi = i64_udiv_i128_i64(u2, v.lo, (u64*)&u3.hi);
+            u3.lo = u.lo;
+            q.lo = i64_udiv_i128_i64(u3, v.lo, &r->lo);
+        }
+        return q;
+    }
+    else {                                           /* 128-bit by 128-bit */
+        q.hi = 0;
+        q.lo = i64_udiv_i128_i128(u, v, r);
+    }
+
+    return q;
+}
+```
+
 ## Building
 
 ### Supported Platforms
