@@ -30,6 +30,56 @@ than bit-wise dividers in old versions of compiler-rt.
 | `div_128_by_64_small`            | 22.60ns |    ~90 |
 | `div_64_by_64`                   |  7.30ns |    ~30 |
 
+## Interface
+
+The 128-bit optimized portable integer type provides the following operations:
+
+```
+/* conversions */
+i128_t i128_from_i64(i64 n);
+i128_t i128_from_u64(u64 n);
+i128_t i128_from_uv64(u64 *v);
+i64 i64_from_i128(i128_t n);
+u64 u64_from_i128(i128_t n);
+u64* uv64_from_i128(i128_t *v);
+
+/* logical operations and shifts */
+i128_t i128_not(i128_t u);
+i128_t i128_and(i128_t u, i128_t v);
+i128_t i128_or(i128_t u, i128_t v);
+i128_t i128_xor(i128_t u, i128_t v);
+i128_t i128_sll(i128_t u, uint shamt);
+i128_t i128_srl(i128_t u, uint shamt);
+i128_t i128_sra(i128_t u, uint shamt);
+
+/* arithmetic */
+i128_t i128_neg(i128_t u);
+i128_t i128_add(i128_t u, i128_t v);
+i128_t i128_sub(i128_t u, i128_t v);
+i128_t i128_mul(i128_t u, i128_t v);
+i128_t i128_mulu(i128_t u, i128_t v);
+i128_t i128_div(i128_t u, i128_t v);
+i128_t i128_divu(i128_t u, i128_t v);
+i128_t i128_rem(i128_t u, i128_t v);
+i128_t i128_remu(i128_t u, i128_t v);
+
+/* comparisons */
+int i128_cmp_eq(i128_t u, i128_t v);
+int i128_cmp_lt(i128_t u, i128_t v);
+int i128_cmp_gt(i128_t u, i128_t v);
+int i128_cmp_ltu(i128_t u, i128_t v);
+int i128_cmp_gtu(i128_t u, i128_t v);
+int i128_cmp_t(i128_t u, i128_t v);
+int i128_cmp_tu(i128_t u, i128_t v);
+
+/* bit manipulatiom */
+uint i128_ctz(i128_t u);
+uint i128_clz(i128_t u);
+uint i128_popcnt(i128_t u);
+i128_t i128_bswap(i128_t u);
+i128_t i128_brev(i128_t u);
+```
+
 ## Implementation
 
 The 128-bit divider uses accelerated 128-bit by 64-bit primitive to perform
